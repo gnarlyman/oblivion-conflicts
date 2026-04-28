@@ -31,3 +31,10 @@ def test_error_code_to_exit_code():
     assert ErrorCode.USER_ARG.exit_code == 1
     assert ErrorCode.XEDIT_FAIL.exit_code == 2
     assert ErrorCode.PLUGIN_NOT_LOADED.exit_code == 3
+
+
+def test_emit_error_unknown_fmt_raises():
+    import pytest
+    err = ObcError(ErrorCode.USER_ARG, "x")
+    with pytest.raises(ValueError, match="unknown emit format"):
+        emit_error(err, fmt="text")

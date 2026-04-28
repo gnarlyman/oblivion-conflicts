@@ -38,7 +38,9 @@ def emit_error(err: ObcError, *, fmt: str = "json", stream: IO[str] | None = Non
             }
         }
         out.write(json.dumps(payload) + "\n")
-    else:
+    elif fmt == "human":
         out.write(f"error: {err.code.code_name}: {err.message}\n")
         if err.details:
             out.write(f"  details: {err.details}\n")
+    else:
+        raise ValueError(f"unknown emit format {fmt!r}; expected 'json' or 'human'")
