@@ -54,7 +54,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def _validate_source(args: argparse.Namespace) -> None:
     sources = [args.mo2_profile, args.plugins, args.plugins_file]
-    given = [s for s in sources if s]
+    given = [s for s in sources if s is not None]
     if len(given) == 0:
         raise ObcError(
             ErrorCode.USER_ARG,
@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
         args = parse_args(argv)
         _validate_source(args)
     except ObcError as e:
-        emit_error(e, fmt="json")
+        emit_error(e, fmt=args.format)
         return e.code.exit_code
     except SystemExit as e:
         # argparse error path — already wrote to stderr

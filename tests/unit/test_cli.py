@@ -65,3 +65,18 @@ def test_main_validates_only_one_source(capsys):
     assert rc == 1
     err = capsys.readouterr().err
     assert "user_arg" in err
+
+
+def test_main_validation_error_uses_human_format_when_requested(capsys):
+    rc = main([
+        "list", "MOO.esp",
+        "--xedit-path", "C:/x/TES4Edit.exe",
+        "--game-data", "D:/Game/Data",
+        "--format", "human",
+        # no source given → validation error
+    ])
+    assert rc == 1
+    err = capsys.readouterr().err
+    # Human format starts with "error:"; JSON format starts with "{"
+    assert err.startswith("error:")
+    assert "user_arg" in err
