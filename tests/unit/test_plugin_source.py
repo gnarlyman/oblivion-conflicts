@@ -104,3 +104,18 @@ def test_resolve_plugins_file_missing_raises(tmp_path: Path):
         resolve_from_plugins_file(f)
     assert ei.value.code == ErrorCode.USER_ARG
     assert "nope.txt" in ei.value.message
+
+
+def test_resolve_plugins_file_strips_inline_comments(tmp_path: Path):
+    f = tmp_path / "list.txt"
+    f.write_text("Oblivion.esm  # base game\nMOO.esp\n", encoding="utf-8")
+    assert resolve_from_plugins_file(f) == ["Oblivion.esm", "MOO.esp"]
+
+
+def test_resolve_plugins_file_only_comments_raises(tmp_path: Path):
+    f = tmp_path / "empty.txt"
+    f.write_text("# just a comment\n\n", encoding="utf-8")
+    with pytest.raises(ObcError) as ei:
+        resolve_from_plugins_file(f)
+    assert ei.value.code == ErrorCode.USER_ARG
+    assert "empty" in ei.value.message
