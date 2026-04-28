@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime as dt
 import json
 import sys
 from typing import IO
@@ -14,6 +13,7 @@ def build_envelope(
     args: dict,
     load_order: list[str],
     xedit_version: str,
+    started_at: str,
     duration_ms: int,
     results: list,
 ) -> dict:
@@ -25,7 +25,7 @@ def build_envelope(
             "command": command,
             "args": args,
             "load_order": load_order,
-            "started_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+            "started_at": started_at,
             "duration_ms": duration_ms,
         },
         "results": results,
@@ -34,7 +34,7 @@ def build_envelope(
 
 def emit_json(envelope: dict, *, stream: IO[str] | None = None) -> None:
     out = stream if stream is not None else sys.stdout
-    out.write(json.dumps(envelope) + "\n")
+    out.write(json.dumps(envelope, separators=(",", ":")) + "\n")
 
 
 def emit_human(envelope: dict, *, stream: IO[str] | None = None) -> None:
@@ -45,4 +45,4 @@ def emit_human(envelope: dict, *, stream: IO[str] | None = None) -> None:
     out.write(f"# command: {cmd}\n")
     out.write(f"# results: {len(results)}\n")
     for r in results:
-        out.write(json.dumps(r) + "\n")
+        out.write(json.dumps(r, separators=(",", ":")) + "\n")
