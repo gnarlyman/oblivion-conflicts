@@ -51,3 +51,25 @@ def test_resolve_mo2_profile_missing_plugins_raises(tmp_path: Path):
         resolve_from_mo2_profile(profile)
     assert ei.value.code == ErrorCode.USER_ARG
     assert "plugins.txt" in ei.value.message
+
+
+def test_resolve_mo2_profile_handles_crlf(tmp_path: Path):
+    profile = tmp_path / "p"
+    profile.mkdir()
+    # Pin exact CRLF bytes (write_text would re-translate on Windows)
+    (profile / "loadorder.txt").write_bytes(
+        "﻿Oblivion.esm\r\nMOO.esp\r\n".encode("utf-8")
+    )
+    (profile / "plugins.txt").write_bytes(
+        "﻿*Oblivion.esm\r\n*MOO.esp\r\n".encode("utf-8")
+    )
+    assert resolve_from_mo2_profile(profile) == ["Oblivion.esm", "MOO.esp"]
+
+
+def test_resolve_mo2_profile_filename_case_mismatch_still_resolves(tmp_path: Path):
+    profile = tmp_path / "p"
+    write(profile / "loadorder.txt", "Oblivion.esm\nMOO.esp\n")
+    # plugins.txt uses different casing — the active set should still match
+    write(profile / "plugins.txt", "*oblivion.esm\n*moo.esp\n")
+    # Output uses casing from loadorder.txt (the authoritative source)
+    assert resolve_from_mo2_profile(profile) == ["Oblivion.esm", "MOO.esp"]
