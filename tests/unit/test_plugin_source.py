@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 from oblivion_conflicts.errors import ObcError, ErrorCode
-from oblivion_conflicts.plugin_source import resolve_from_mo2_profile
+from oblivion_conflicts.plugin_source import resolve_from_mo2_profile, resolve_from_explicit, resolve_from_plugins_file
 
 
 def write(p: Path, text: str) -> None:
@@ -73,3 +73,34 @@ def test_resolve_mo2_profile_filename_case_mismatch_still_resolves(tmp_path: Pat
     write(profile / "plugins.txt", "*oblivion.esm\n*moo.esp\n")
     # Output uses casing from loadorder.txt (the authoritative source)
     assert resolve_from_mo2_profile(profile) == ["Oblivion.esm", "MOO.esp"]
+
+
+def test_resolve_explicit_returns_list_unchanged():
+    result = resolve_from_explicit(["Oblivion.esm", "MOO.esp"])
+    assert result == ["Oblivion.esm", "MOO.esp"]
+
+
+def test_resolve_explicit_strips_whitespace_and_skips_blanks():
+    result = resolve_from_explicit(["  Oblivion.esm  ", "", "MOO.esp"])
+    assert result == ["Oblivion.esm", "MOO.esp"]
+
+
+def test_resolve_explicit_empty_raises():
+    with pytest.raises(ObcError) as ei:
+        resolve_from_explicit([])
+    assert ei.value.code == ErrorCode.USER_ARG
+
+
+def test_resolve_plugins_file_reads_one_per_line(tmp_path: Path):
+    f = tmp_path / "list.txt"
+    f.write_text("# header\nOblivion.esm\n\nDLCShiveringIsles.esp\nMOO.esp\n", encoding="utf-8")
+    result = resolve_from_plugins_file(f)
+    assert result == ["Oblivion.esm", "DLCShiveringIsles.esp", "MOO.esp"]
+
+
+def test_resolve_plugins_file_missing_raises(tmp_path: Path):
+    f = tmp_path / "nope.txt"
+    with pytest.raises(ObcError) as ei:
+        resolve_from_plugins_file(f)
+    assert ei.value.code == ErrorCode.USER_ARG
+    assert "nope.txt" in ei.value.message

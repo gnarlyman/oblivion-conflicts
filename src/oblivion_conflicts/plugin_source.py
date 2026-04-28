@@ -55,3 +55,38 @@ def resolve_from_mo2_profile(profile_dir: Path) -> list[str]:
         if s.lower() in enabled_lower:
             ordered.append(s)
     return ordered
+
+
+def resolve_from_explicit(plugins: list[str]) -> list[str]:
+    """Resolve from a list passed as CLI args. Strips whitespace, skips blanks."""
+    cleaned = [p.strip() for p in plugins if p.strip()]
+    if not cleaned:
+        raise ObcError(
+            ErrorCode.USER_ARG,
+            "no plugins given to --plugins",
+            {},
+        )
+    return cleaned
+
+
+def resolve_from_plugins_file(path: Path) -> list[str]:
+    """Resolve from a file with one plugin filename per line. '#' starts a comment."""
+    path = Path(path)
+    if not path.is_file():
+        raise ObcError(
+            ErrorCode.USER_ARG,
+            f"plugins file not found: {path}",
+            {"path": str(path)},
+        )
+    out: list[str] = []
+    for line in _read_lines(path):
+        s = line.split("#", 1)[0].strip()
+        if s:
+            out.append(s)
+    if not out:
+        raise ObcError(
+            ErrorCode.USER_ARG,
+            f"plugins file is empty: {path}",
+            {"path": str(path)},
+        )
+    return out
