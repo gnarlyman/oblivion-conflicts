@@ -1,0 +1,34 @@
+[project]
+name = "oblivion-conflicts"
+version = "0.1.0"
+description = "CLI for Oblivion (TES4) plugin conflict reporting via xEdit headless"
+requires-python = ">=3.12"
+license = {text = "MPL-2.0"}
+authors = [{name = "mschon"}]
+dependencies = []
+
+[project.optional-dependencies]
+human = ["rich>=13"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+obc = "oblivion_conflicts.cli:main"
+oblivion-conflicts = "oblivion_conflicts.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/oblivion_conflicts"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"src/oblivion_conflicts/scripts" = "oblivion_conflicts/scripts"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
