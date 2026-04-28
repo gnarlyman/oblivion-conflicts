@@ -30,7 +30,7 @@ def build_xedit_argv(
         "-autoload",
         "-autoexit",
         f"-D:{_fwd(game_data)}",
-        f"-PSEUDO:{_fwd(load_list_file)}",
+        f"-P:{_fwd(load_list_file)}",
         f"-script:{_fwd(script_path)}",
     ]
 
