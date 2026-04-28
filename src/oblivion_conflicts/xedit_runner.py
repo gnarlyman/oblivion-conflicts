@@ -16,12 +16,19 @@ def build_xedit_argv(
     load_list_file: Path,
     script_path: Path,
 ) -> list[str]:
-    """Construct the argv for invoking xEdit headless against a load list + script."""
+    """Construct the argv for invoking xEdit headless against a load list + script.
+
+    -autoload + -autoexit make xEdit truly headless: skip the load dialog at
+    startup and close after Initialize returns. Without these, xEdit shows the
+    GUI and waits for user dismissal even with -script:. Source: xeInit.pas.
+    """
     return [
         _fwd(xedit_path),
         "-tes4",
         "-nobuildrefs",
         "-IKnowWhatImDoing",
+        "-autoload",
+        "-autoexit",
         f"-D:{_fwd(game_data)}",
         f"-PSEUDO:{_fwd(load_list_file)}",
         f"-script:{_fwd(script_path)}",

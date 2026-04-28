@@ -15,6 +15,8 @@ def test_build_argv_basic(tmp_path: Path):
     assert "-tes4" in argv
     assert "-nobuildrefs" in argv
     assert "-IKnowWhatImDoing" in argv
+    assert "-autoload" in argv
+    assert "-autoexit" in argv
     assert any(a.startswith("-D:") and a.endswith("D:/Game/Data") for a in argv)
     assert any(a.startswith("-PSEUDO:") and a.endswith(str(tmp_path / "load.txt").replace("\\", "/")) for a in argv)
     assert any(a.startswith("-script:") and a.endswith("scripts/query_list.pas") for a in argv)
