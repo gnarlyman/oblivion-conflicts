@@ -95,6 +95,7 @@ run_one() {
 }
 
 run_one query_list query_list.pas --target=OverrideA.esp
+run_one query_record query_record.pas --formid=00001001 --formid=00001002
 
 if [[ $FAILED -ne 0 ]]; then
   echo "FAILED" >&2

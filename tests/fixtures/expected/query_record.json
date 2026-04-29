@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "args": {
+      "formid": [
+        "00001001",
+        "00001002"
+      ]
+    },
+    "load_order": [
+      "Master.esm",
+      "OverrideA.esp",
+      "OverrideB.esp"
+    ],
+    "query": "record",
+    "xedit_version": "67175696"
+  },
+  "results": [
+    {
+      "chain": [
+        "Master.esm",
+        "OverrideA.esp",
+        "OverrideB.esp"
+      ],
+      "conflict_status": "caConflict",
+      "edid": "TestSword",
+      "is_deleted": false,
+      "lo_formid_hex": "00001001",
+      "master_plugin": "Master.esm",
+      "signature": "WEAP",
+      "subrecords": [
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "FULL",
+          "values": [
+            {
+              "edit_value": "Test Sword",
+              "plugin": "Master.esm"
+            },
+            {
+              "edit_value": "Test Sword",
+              "plugin": "OverrideA.esp"
+            },
+            {
+              "edit_value": "Test Sword",
+              "plugin": "OverrideB.esp"
+            }
+          ],
+          "winner_plugin": "OverrideB.esp"
+        },
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "DATA",
+          "values": [
+            {
+              "edit_value": "",
+              "plugin": "Master.esm"
+            },
+            {
+              "edit_value": "",
+              "plugin": "OverrideA.esp"
+            },
+            {
+              "edit_value": "",
+              "plugin": "OverrideB.esp"
+            }
+          ],
+          "winner_plugin": "OverrideB.esp"
+        }
+      ],
+      "winner_plugin": "OverrideB.esp"
+    },
+    {
+      "chain": [
+        "Master.esm",
+        "OverrideA.esp"
+      ],
+      "conflict_status": "caOverride",
+      "edid": "TestArmor",
+      "is_deleted": false,
+      "lo_formid_hex": "00001002",
+      "master_plugin": "Master.esm",
+      "signature": "ARMO",
+      "subrecords": [
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "FULL",
+          "values": [
+            {
+              "edit_value": "Test Armor",
+              "plugin": "Master.esm"
+            },
+            {
+              "edit_value": "Test Armor",
+              "plugin": "OverrideA.esp"
+            }
+          ],
+          "winner_plugin": "OverrideA.esp"
+        },
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "BMDT",
+          "values": [
+            {
+              "edit_value": "",
+              "plugin": "Master.esm"
+            },
+            {
+              "edit_value": "",
+              "plugin": "OverrideA.esp"
+            }
+          ],
+          "winner_plugin": "OverrideA.esp"
+        },
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "DATA",
+          "values": [
+            {
+              "edit_value": "",
+              "plugin": "Master.esm"
+            },
+            {
+              "edit_value": "",
+              "plugin": "OverrideA.esp"
+            }
+          ],
+          "winner_plugin": "OverrideA.esp"
+        }
+      ],
+      "winner_plugin": "OverrideA.esp"
+    }
+  ]
+}
