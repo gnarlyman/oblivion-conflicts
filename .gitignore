@@ -1,13 +1,15 @@
-__pycache__/
-*.pyc
-.venv/
-venv/
-.pytest_cache/
-.ruff_cache/
-build/
-dist/
-*.egg-info/
-.tmp/
+# Editor / OS
 *.swp
 .DS_Store
 Thumbs.db
+
+# Generated test artefacts
+tests/.tmp/
+tests/actual/
+
+# xEdit per-data-dir state
+*.tes4viewsettings
+
+# Local environment
+.env
+.env.local
