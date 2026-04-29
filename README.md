@@ -75,14 +75,28 @@ On error: `"error": {"code": "...", "message": "..."}` instead of `"results"`. E
 - **`GetSummary` may return empty strings** under the patched binary. Both `a_summary` and `b_summary` are wrapped in try/except with empty fallback.
 - **`load_order` may include `Oblivion.exe`** when running against a real game data dir — xEdit treats the engine as a synthetic plugin. Fixture tests don't trigger this.
 
-## Reborn shortcut
+## Reborn shortcut (run against a real MO2 modlist)
 
+`examples/reborn-shortcut.sh` launches the patched xEdit through MO2 so USVFS overlay is active and xEdit sees every modlist plugin (not just what's in the bare game data dir).
+
+**One-time setup:** in MO2, register the patched binary as a custom executable (Tools → Modify Executables → Add):
+- Title: `TES4Edit_patched`
+- Binary: `<your install>/mods/.../TES4Edit_patched.exe`
+- Arguments / Working directory: leave blank (the wrapper supplies them)
+
+**Usage:**
 ```bash
-export OBLIVION_CONFLICTS_XEDIT="D:/Modlists/Reborn/mods/TES4Edit 4.1.5f/TES4Edit 4.1.5f/TES4Edit_patched.exe"
-./examples/reborn-shortcut.sh list   --target=MOO.esp --out=/tmp/list.json
+./examples/reborn-shortcut.sh list   --target="Maskar's Oblivion Overhaul.esp" --out=/tmp/moo.json
 ./examples/reborn-shortcut.sh record --formid=1E012345 --out=/tmp/rec.json
 ./examples/reborn-shortcut.sh between --a=MOO.esp --b=OOO.esp --out=/tmp/diff.json
+./examples/reborn-shortcut.sh /full/path/to/custom.pas --foo=bar --out=/tmp/x.json
 ```
+
+The first argument is either a query shortcut (`list` / `record` / `between`) or an absolute path to any `.pas` script. Remaining args go through to xEdit.
+
+**Env-var overrides (defaults match Reborn):** `OBLIVION_CONFLICTS_MO2`, `OBLIVION_CONFLICTS_EXE_TITLE`, `OBLIVION_CONFLICTS_DATA`, `OBLIVION_CONFLICTS_PROFILE`, `OBLIVION_CONFLICTS_PLUGINS`. Run `./examples/reborn-shortcut.sh --help` to see the resolved values.
+
+The wrapper auto-applies an internal-quoting trick to args containing spaces because MO2 forwards trailing CLI args via `args.join(" ")` with no requoting (see `processrunner.cpp:620` in MO2 source). Callers don't need to know — pass args naturally.
 
 ## Tests
 
