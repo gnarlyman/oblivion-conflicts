@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "args": {
+      "a": "OverrideA.esp",
+      "b": "OverrideB.esp"
+    },
+    "load_order": [
+      "Master.esm",
+      "OverrideA.esp",
+      "OverrideB.esp"
+    ],
+    "query": "between",
+    "xedit_version": "67175696"
+  },
+  "results": [
+    {
+      "a_summary": "",
+      "b_summary": "",
+      "edid": "TestSword",
+      "lo_formid_hex": "00001001",
+      "signature": "WEAP",
+      "subrecords": [
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "FULL"
+        },
+        {
+          "conflict_status": "caNoConflict",
+          "signature": "DATA"
+        }
+      ],
+      "winner_plugin": "OverrideB.esp"
+    }
+  ]
+}

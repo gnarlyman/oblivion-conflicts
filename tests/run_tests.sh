@@ -96,6 +96,7 @@ run_one() {
 
 run_one query_list query_list.pas --target=OverrideA.esp
 run_one query_record query_record.pas --formid=00001001 --formid=00001002
+run_one query_between query_between.pas --a=OverrideA.esp --b=OverrideB.esp
 
 if [[ $FAILED -ne 0 ]]; then
   echo "FAILED" >&2
