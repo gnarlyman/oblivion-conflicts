@@ -9,6 +9,7 @@ tests/actual/
 
 # xEdit per-data-dir state
 *.tes4viewsettings
+TES4Edit Cache/
 
 # Local environment
 .env
