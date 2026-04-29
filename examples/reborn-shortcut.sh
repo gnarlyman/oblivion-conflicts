@@ -4,6 +4,7 @@
 # OBLIVION_CONFLICTS_* env vars below for any other modlist.
 #
 # Usage:
+#   ./reborn-shortcut.sh conflicts --out=cache/sweep.json
 #   ./reborn-shortcut.sh list   --target=MOO.esp --out=/tmp/list.json
 #   ./reborn-shortcut.sh record --formid=1E012345 --out=/tmp/rec.json
 #   ./reborn-shortcut.sh between --a=MOO.esp --b=OOO.esp --out=/tmp/diff.json
@@ -38,6 +39,9 @@ if [[ $# -lt 1 ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
 usage: $(basename "$0") <query | script.pas> [--key=value ...]
 
 queries:
+  conflicts               built-in CLI mode in patched binary; whole-modlist
+                          sweep, no .pas script (requires the tmConflicts
+                          patched binary, see README)
   list, record, between   resolves to scripts/query_<name>.pas
   /path/to/file.pas       absolute path to a custom Pascal script
 
@@ -53,12 +57,13 @@ fi
 
 QUERY="$1"; shift
 case "$QUERY" in
+  conflicts)     SCRIPT="" ;;  # built-in CLI mode in patched binary; no .pas
   *.pas)         SCRIPT="$QUERY" ;;
   list|record|between) SCRIPT="$SCRIPTS_DIR/query_$QUERY.pas" ;;
   *)             SCRIPT="$SCRIPTS_DIR/query_$QUERY.pas" ;;
 esac
 
-if [[ ! -f "$SCRIPT" ]]; then
+if [[ "$QUERY" != "conflicts" && ! -f "$SCRIPT" ]]; then
   echo "no such Pascal script: $SCRIPT" >&2
   exit 2
 fi
@@ -97,10 +102,23 @@ XEDIT_ARGS=(
   -autoexit
   "$(requote "-D:$DATA")"
   "$(requote "-P:$PLUGINS")"
-  "$(requote "-script:$SCRIPT")"
 )
+
+if [[ "$QUERY" == "conflicts" ]]; then
+  XEDIT_ARGS+=(-conflicts)
+else
+  XEDIT_ARGS+=("$(requote "-script:$SCRIPT")")
+fi
+
+# Forward trailing user args. The Pascal scripts accept --out=<path>;
+# the built-in -conflicts CLI mode wants -out:<path>. Translate so
+# callers can use --out=<path> uniformly.
 for u in "$@"; do
-  XEDIT_ARGS+=("$(requote "$u")")
+  if [[ "$QUERY" == "conflicts" && "$u" == --out=* ]]; then
+    XEDIT_ARGS+=("$(requote "-out:${u#--out=}")")
+  else
+    XEDIT_ARGS+=("$(requote "$u")")
+  fi
 done
 
 exec "$MO2" "$EXE_TITLE" "${XEDIT_ARGS[@]}"

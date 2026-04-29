@@ -7,6 +7,9 @@ Thumbs.db
 tests/.tmp/
 tests/actual/
 
+# Sweep cache (regenerable; large)
+cache/
+
 # xEdit per-data-dir state
 *.tes4viewsettings
 TES4Edit Cache/

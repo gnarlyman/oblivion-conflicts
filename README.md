@@ -1,15 +1,18 @@
 # oblivion-conflicts
 
-Pascal scripts that drive the patched headless `TES4Edit_patched.exe` to emit Oblivion (TES4) plugin-conflict information as machine-readable JSON. Three queries, no Python wrapper, no GUI.
+Headless Oblivion (TES4) plugin-conflict reporting. Drives a patched xEdit binary (built from a fork of TES5Edit) to emit conflict information as machine-readable JSON. No GUI, no Python wrapper.
 
-The patched binary is a 4-line Delphi patch over upstream xEdit 4.1.5f that makes `-autoload -autoexit` honour `-script:` instead of the GUI ignoring it. See the parent project Reborn (`D:/Modlists/Reborn/`) for the patched-binary build instructions.
+The patched binary lives at [gnarlyman/TES5Edit](https://github.com/gnarlyman/TES5Edit), branch `feat/tmconflicts`. Two patches over upstream xEdit 4.1.5f:
+- A new `-conflicts` CLI tool mode that walks the entire load order and writes a JSON conflict matrix in one launch (~30 s for a 51-plugin modlist).
+- A small fix that lets `-autoload -autoexit` honour `-script:` so per-plugin Pascal queries can run headless.
 
 ## Status
 
-v0.1 — three queries working against the fixture corpus and a real Reborn load order:
+v0.2 — built-in `-conflicts` sweep + three Pascal scripts for targeted questions:
 
 | Query | What it answers |
 |---|---|
+| `-conflicts` (CLI mode) | One launch → every conflict-bearing record across the load order. The basis for cache-driven workflows. |
 | `query_list`    | Which records does plugin X define-or-override that someone else also touches, and how serious is each conflict? |
 | `query_between` | What records do plugins A and B both touch, and which subrecords disagree? |
 | `query_record`  | Show the full chain and per-subrecord values for one or more FormIDs. |
@@ -23,13 +26,28 @@ v0.1 — three queries working against the fixture corpus and a real Reborn load
 ## Usage
 
 ```bash
+# Pascal-script queries (list, record, between):
 TES4Edit_patched.exe -IKnowWhatImDoing -autoload -autoexit \
   -D:"<DataDir>" \
   -P:"<plugins.txt>" \
   -script:scripts/query_<name>.pas \
   --<arg>=<value> ... \
   --out=<output.json>
+
+# Built-in -conflicts CLI mode (whole-modlist sweep):
+TES4Edit_patched.exe -conflicts -IKnowWhatImDoing -autoload -autoexit \
+  -D:"<DataDir>" \
+  -P:"<plugins.txt>" \
+  -out:<output.json>
 ```
+
+### `-conflicts -out:<path>`
+
+Walks the entire loaded load order, emits one entry per main record whose conflict status is `caOverride` or higher (skips `caOnlyOne` and `caNoConflict`). Conflict status computed via `ConflictLevelForMainRecord` per record (the cached `mrConflictAll` field is only populated by GUI nav-tree paths and is empty in headless).
+
+Per-record fields: `fid` (load-order FormID hex), `sig` (4-char signature), `edid`, `status` (`caOverride`/`caConflict`/`caConflictCritical`/...), `winner` (filename of winning override), `chain` (master + every override; each entry has `plugin` and `summary` — `summary` is currently empty, populated in a future revision).
+
+Designed for sweep-once-per-modlist workflows: query the resulting JSON via `jq` instead of relaunching xEdit per question. Reborn-Base perf: 51 plugins, 97k records, ~30 s wall clock, 21 MB cache.
 
 ### `query_list --target=<plugin> --out=<path>`
 
@@ -86,17 +104,65 @@ On error: `"error": {"code": "...", "message": "..."}` instead of `"results"`. E
 
 **Usage:**
 ```bash
+./examples/reborn-shortcut.sh conflicts --out=cache/sweep.json
 ./examples/reborn-shortcut.sh list   --target="Maskar's Oblivion Overhaul.esp" --out=/tmp/moo.json
 ./examples/reborn-shortcut.sh record --formid=1E012345 --out=/tmp/rec.json
 ./examples/reborn-shortcut.sh between --a=MOO.esp --b=OOO.esp --out=/tmp/diff.json
 ./examples/reborn-shortcut.sh /full/path/to/custom.pas --foo=bar --out=/tmp/x.json
 ```
 
-The first argument is either a query shortcut (`list` / `record` / `between`) or an absolute path to any `.pas` script. Remaining args go through to xEdit.
+The first argument is either a query shortcut (`conflicts` / `list` / `record` / `between`) or an absolute path to any `.pas` script. `conflicts` invokes the built-in `-conflicts` CLI mode; the others run a Pascal script via `-script:`. Remaining args go through to xEdit (the wrapper translates `--out=path` → `-out:path` for the conflicts mode since the CLI flag uses single-colon syntax).
 
 **Env-var overrides (defaults match Reborn):** `OBLIVION_CONFLICTS_MO2`, `OBLIVION_CONFLICTS_EXE_TITLE`, `OBLIVION_CONFLICTS_DATA`, `OBLIVION_CONFLICTS_PROFILE`, `OBLIVION_CONFLICTS_PLUGINS`. Run `./examples/reborn-shortcut.sh --help` to see the resolved values.
 
 The wrapper auto-applies an internal-quoting trick to args containing spaces because MO2 forwards trailing CLI args via `args.join(" ")` with no requoting (see `processrunner.cpp:620` in MO2 source). Callers don't need to know — pass args naturally.
+
+## Querying the sweep cache
+
+The `-conflicts` sweep writes one JSON file. `jq` answers most questions directly — no CLI tool needed.
+
+**What does plugin X override?**
+
+```bash
+jq '.results[] | select(.winner == "APW - Conflict Resolution.esp")' cache/sweep.json
+```
+
+**Grouped by overridden plugin (with category counts):**
+
+```bash
+jq '[.results[] | select(.winner == "APW - Conflict Resolution.esp")]
+    | group_by(.chain[-2].plugin)
+    | map({plugin: .[0].chain[-2].plugin,
+           count: length,
+           sigs: ([.[].sig] | unique)})' cache/sweep.json
+```
+
+**Who overrides records in plugin X?**
+
+```bash
+jq '.results[] | select(any(.chain[]; .plugin == "PSMainQuestDelayer.esp")
+                        and .winner != "PSMainQuestDelayer.esp")' cache/sweep.json
+```
+
+**Category roll-up of one plugin's overrides:**
+
+```bash
+jq '[.results[] | select(.winner == "APW - Conflict Resolution.esp")]
+    | group_by(.sig)
+    | map({sig: .[0].sig, count: length})' cache/sweep.json
+```
+
+**The high-stakes records (caConflict + caConflictCritical):**
+
+```bash
+jq '.results[] | select(.status == "caConflict" or .status == "caConflictCritical")' cache/sweep.json
+```
+
+For per-subrecord drill-down on a specific record (since the sweep only emits record-level status), use `query_record`:
+
+```bash
+./examples/reborn-shortcut.sh record --formid=1E012345 --out=/tmp/r.json
+```
 
 ## Tests
 
