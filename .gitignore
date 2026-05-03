@@ -17,3 +17,6 @@ TES4Edit Cache/
 # Local environment
 .env
 .env.local
+
+# Runtime logs (xEdit / USVFS launcher / SimpleProviderManaged)
+*.log
